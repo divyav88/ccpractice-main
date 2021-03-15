@@ -1,13 +1,20 @@
 
 import uuid
+# import debugpy
 from flask import Flask, g, jsonify, request, json
 from flask_oidc import OpenIDConnect
 from flask_cors import CORS, cross_origin
 
+from dataaccess.requestsDataAccess import RequestDataAccess
+from utils.jsonClassEncoder import JsonClassEncoder
+
 # configuration
 DEBUG = True
-
+# debugpy.listen(5678)
 app = Flask(__name__)
+
+requestDataAccess = RequestDataAccess()
+jsonClassEncoder = JsonClassEncoder()
 
 # enable CORS
 CORS(app)
@@ -46,7 +53,6 @@ BOOKS = [
     }
 ]
 
-
 @app.route('/')
 def home():
     if oidc.user_loggedin:
@@ -58,22 +64,25 @@ def home():
 @oidc.require_login
 @cross_origin()
 def dashboard():
-    email = g.oidc_token_info['email']
-    userid = g.oidc_token_info['sub']
-    username = g.oidc_token_info['username']
-    userobject = {'Name':username,'Email':email,'ID':userid}
+    userinfo = oidc.user_getinfo(['email','preferred_username','sub'])
 
-    return("This is your dashboard, %s and your email is %s! and UserId is %s"%(jsonify(userobject)))
+    username = userinfo.get('preferred_username')
+    email  = userinfo.get('email')
+    userid = userinfo.get('sub')
+
+    return("This is your dashboard, %s and your email is %s! and UserId is %s"%(username,email,userid))
 
 @app.route('/user')
-@oidc.accept_token(True)
+# @oidc.accept_token(True)
 def user():
-    
-    email = g.oidc_token_info['email']
-    userid = g.oidc_token_info['sub']
-    username = g.oidc_token_info['username']
-    userobject = {'Name':username,'Email':email,'ID':userid}
-    response = jsonify(userobject)
+    # debugpy.wait_for_client()
+    # debugpy.breakpoint()
+    response = jsonify('Test debug')
+    # email = g.oidc_token_info['email']
+    # userid = g.oidc_token_info['sub']
+    # username = g.oidc_token_info['username']
+    # userobject = {'Name':username,'Email':email,'ID':userid}
+    # response = jsonify(userobject)
 
     return response    
 
@@ -91,6 +100,7 @@ def remove_book(book_id):
 
 
 @app.route('/books', methods=['GET', 'POST'])
+@oidc.accept_token(True)
 def all_books():
     response_object = {'status': 'success'}
     if request.method == 'POST':
@@ -109,6 +119,7 @@ def all_books():
 
 
 @app.route('/books/<book_id>', methods=['PUT', 'DELETE'])
+@oidc.accept_token(True)
 def single_book(book_id):
     response_object = {'status': 'success'}
     if request.method == 'PUT':
@@ -126,5 +137,28 @@ def single_book(book_id):
         response_object['message'] = 'Book removed!'
     return jsonify(response_object)
 
+@app.route('/requests/add', methods=['POST', 'GET'])
+def addrequest():
+    requestjson = request.get_json()
+
+    name = requestjson['name']
+    description = requestjson['description']
+    status = requestjson['status']
+    createdby = requestjson['createdby']   
+    updated = requestjson['updated']
+
+    requestaddresult = requestDataAccess.AddRequest(name, description, status, createdby, updated)
+    if requestaddresult.success == True:
+        return jsonClassEncoder.encode(requestaddresult), 200
+    else:
+        return jsonClassEncoder.encode(requestaddresult), 500
+
+@app.route('/requests/all', methods=['GET'])
+def getallrequests():
+    requests = requestDataAccess.GetRequests()
+    jsondata = json.dumps(requests)
+    return jsondata, 200
+
+
 if __name__ == '__main__':
-    app.run('0.0.0.0', 5000, debug=True)
+    app.run(debug=True)
