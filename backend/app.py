@@ -4,6 +4,7 @@ import uuid
 from flask import Flask, g, jsonify, request, json
 from flask_oidc import OpenIDConnect
 from flask_cors import CORS, cross_origin
+from utils.util import cors_preflight
 
 from dataaccess.requestsDataAccess import RequestDataAccess
 from utils.jsonClassEncoder import JsonClassEncoder
@@ -137,6 +138,7 @@ def single_book(book_id):
         response_object['message'] = 'Book removed!'
     return jsonify(response_object)
 
+@cors_preflight('GET,POST,OPTIONS')
 @app.route('/requests/add', methods=['POST', 'GET'])
 def addrequest():
     requestjson = request.get_json()

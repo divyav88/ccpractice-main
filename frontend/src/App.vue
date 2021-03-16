@@ -1,19 +1,28 @@
 <template>
   <div id="app">
-     <Navbar/>
-    <router-view />
-    <!-- <h1>HELLO</h1>
-     <h2 style="margin-left: 50px;">User: {{keycloak.tokenParsed.preferred_username}}</h2> -->
+    <Navbar/>
+    <router-view/>
   </div>
 </template>
 
 <script>
-import Navbar from './components/Navbar';
+/* eslint-disable */
+import Home from "./components/Home.vue";
+import Navbar from "./components/Navigation";
+
 
 export default {
-  name: 'App',
+  name: "App",
+  props: ["keycloak"],
   components: {
-    Navbar,
+    Home,
+    Navbar
   },
+  // data() {
+    
+  // },
+  mounted() {
+  
+  }
 };
 </script>

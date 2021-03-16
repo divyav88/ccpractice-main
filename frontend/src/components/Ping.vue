@@ -17,7 +17,11 @@ export default {
   methods: {
     getMessage() {
       const path = 'http://localhost:5000/ping';
-      axios.get(path)
+      axios.get(path, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('vue-token')}`,
+        },
+      })
         .then((res) => {
           this.msg = res.data;
         })

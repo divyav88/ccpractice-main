@@ -122,6 +122,7 @@
 </template>
 
 <script>
+/* eslint-disable */
 import axios from 'axios';
 import Alert from './Alert.vue';
 
@@ -150,7 +151,11 @@ export default {
   methods: {
     getBooks() {
       const path = 'http://localhost:5000/books';
-      axios.get(path)
+      axios.get(path, {
+        headers: {
+          Authorization: "Bearer " + localStorage.getItem('vue-token')
+        }
+      })
         .then((res) => {
           this.books = res.data.books;
         })

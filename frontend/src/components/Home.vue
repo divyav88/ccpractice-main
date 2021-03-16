@@ -1,17 +1,11 @@
-<!-- 
-frontend\src\views\Home.vue
-Author: Author : Andre Baldo (http://github.com/andrebaldo/) -->
 <template>
-  <div class="home">
-    <h1>Home</h1>
-  </div>
+<div></div>
 </template>
-
 <script>
 export default {
-  name: 'home',
-  components: {
-   
-  }
-}
+  name: 'Home',
+  props: {
+    msg: String,
+  },
+};
 </script>
