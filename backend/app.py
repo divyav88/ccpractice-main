@@ -1,6 +1,6 @@
 
 import uuid
-from flask import Flask, g, jsonify, request, json
+from flask import Flask, g, jsonify, request, json, send_file
 from flask_oidc import OpenIDConnect
 from flask_cors import CORS, cross_origin
 # from entities.request import Request
@@ -73,6 +73,23 @@ def file_upload(requestid):
     latest_file = latest_file.replace("\\", "/")
     print(latest_file)
     print(' * received form with', request.files['image'])  
+    return jsonClassEncoder.encode(True), 200
+
+@app.route('/requests/download/<requestid>', methods=['GET','POST'])
+@cors_preflight('GET,POST,OPTIONS')
+# @oidc.accept_token(True)
+def file_download(requestid): 
+    folderpath = app.config['UPLOAD_FOLDER'] + requestid + '/'
+    list_of_files = glob.glob(folderpath + '*') # * means all if need specific format then *.csv
+    latest_file = max(list_of_files, key=os.path.getctime)
+    latest_file = latest_file.replace("\\", "/")
+    arr = latest_file.split("/")
+    filename = arr[len(arr)-1]
+    print(latest_file)  
+    try:
+        return send_file(latest_file, as_attachment=True)
+    except Exception as e:
+        print(e)        
     return jsonClassEncoder.encode(True), 200
 
 @app.route('/requests/<requestid>', methods=['PUT', 'DELETE'])

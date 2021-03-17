@@ -54,7 +54,7 @@
                   <button
                           type="button"
                           class="btn btn-info btn-sm"                         
-                          @click="editRequest(request)">
+                          @click="downloadRequest(request)">
                       Download
                   </button>
                 </div>
@@ -193,6 +193,7 @@
 /* eslint-disable */
 import axios from 'axios';
 import Alert from './Alert.vue';
+import FileDownload from 'js-file-download'
 
 export default {
   data() {
@@ -317,6 +318,32 @@ export default {
           .then(() => {
             this.getRequests();
             this.message = 'File uploaded!';
+            this.showMessage = true;
+        })
+        .catch((error) => {
+          console.error(error);
+          // this.getRequests();
+        });
+    }, 
+    downloadRequest(request) {        
+      // this.$refs.uploadRequestModal.hide();         
+      let requestID = request.requestid;      
+      var optionAxios = {
+            headers: {
+               Authorization: "Bearer " + localStorage.getItem('vue-token'),
+               responseType: 'blob' 
+            }
+        }
+      const path = `http://localhost:5000/requests/download/${requestID}`;      
+      axios.get(path, optionAxios)     
+          .then((response) => {
+            this.getRequests();
+            this.message = 'File downloaded!';
+            console.log(response)
+            if(response.headers["content-type"] === "image/png")
+            {
+              FileDownload(response.data, 'request.png')
+            }
             this.showMessage = true;
         })
         .catch((error) => {
