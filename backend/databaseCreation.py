@@ -7,7 +7,6 @@
 # from your command pront, tested just on Windows.
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-import datetime
 import json
 import os
 
@@ -35,11 +34,6 @@ class Requests(db.Model):
     name = db.Column(db.String(80), unique=False, nullable=False)
     description = db.Column(db.String(120), unique=False, nullable=False)
     status = db.Column(db.String(25), unique=False, nullable=True)
-    createdby = db.Column(db.String(25), unique=False, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.now().isoformat())
-    updated_at = db.Column(db.TIMESTAMP, default=datetime.datetime.now().isoformat())
-    updated = db.Column(db.Boolean, default=False)
-
     def get_id(self):
         return text_type(self.requestid)
 

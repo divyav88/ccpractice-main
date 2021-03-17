@@ -6,8 +6,8 @@
     <b-collapse id="nav-collapse" is-nav >
       <b-navbar-nav class="ml-auto">
         <b-nav-item href="/">Home</b-nav-item>
-      <b-nav-item href="/dashboard">Books</b-nav-item>
-        <b-nav-item href="#">Login</b-nav-item>
+      <b-nav-item href="/dashboard">Requests</b-nav-item>
+        <b-nav-item href="/login">Login</b-nav-item>
       </b-navbar-nav>
     </b-collapse>
   </b-navbar>

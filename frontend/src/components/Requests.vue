@@ -20,6 +20,7 @@
           </thead>
           <tbody>
             <tr v-for="(request, index) in requests" :key="index">
+              <!-- <td>{{ request.requestid }}</td> -->
               <td>{{ request.name }}</td>
               <td>{{ request.description }}</td>
               <td>{{ request.status }}</td>
@@ -42,6 +43,19 @@
                           class="btn btn-danger btn-sm"
                           @click="onDeleteRequest(request)">
                       Delete
+                  </button>
+                  <button
+                          type="button"
+                          class="btn btn-primary btn-sm"
+                          v-b-modal.request-upload-modal
+                          @click="uploadRequest(request)">
+                      Uplaod
+                  </button>
+                  <button
+                          type="button"
+                          class="btn btn-info btn-sm"                         
+                          @click="editRequest(request)">
+                      Download
                   </button>
                 </div>
               </td>
@@ -151,16 +165,26 @@
                           placeholder="Enter Created By">
             </b-form-input>
           </b-form-group>
-        <b-form-group id="form-updated-edit-group">
-          <b-form-checkbox-group v-model="editForm.updated" id="form-checks">
-            <b-form-checkbox value="true">Updated?</b-form-checkbox>
-          </b-form-checkbox-group>
-        </b-form-group>
+        <!-- <b-form-group id="form-updated-edit-group">
+          <b-form-checkbox-group v-model="editForm.updated" id="form-checks"> -->
+            <b-form-checkbox checked="true">Updated?</b-form-checkbox>
+          <!-- </b-form-checkbox-group>
+        </b-form-group> -->
         <b-button-group>
           <b-button type="submit" variant="primary">Update</b-button>
           <b-button type="reset" variant="danger">Cancel</b-button>
         </b-button-group>
       </b-form>
+    </b-modal>
+    <b-modal ref="uploadRequestModal"
+            id="request-upload-modal"
+            title="Upload"
+            hide-footer>
+        <b-form @submit.prevent="onSubmitUpload" class="w-100">          
+          <b-form-file v-model="uploadedFile" class="mt-3" plain></b-form-file>
+          <div class="mt-3">Selected file: {{ uploadedFile ? uploadedFile.name : '' }}</div>
+          <b-button type="submit" variant="primary">Submit</b-button>
+        </b-form>
     </b-modal>
   </div>
 </template>
@@ -191,6 +215,8 @@ export default {
         createdby: '',
         updated: []
       },
+      file: '',
+      uploadedFile: null
     };
   },
   components: {
@@ -199,13 +225,12 @@ export default {
   methods: {
     getRequests() {
       const path = 'http://localhost:5000/requests/all';
-      axios.get(path)
-      // , {
-      //   headers: {
-      //     Authorization: "Bearer " + localStorage.getItem('vue-token')
-      //   }
-      // }
-      // )
+      var optionAxios = {
+            headers: {
+               Authorization: "Bearer " + localStorage.getItem('vue-token')
+            }
+        }
+      axios.get(path, optionAxios)
         .then((res) => {
           this.requests = res.data;          
         })
@@ -218,19 +243,19 @@ export default {
       const path = 'http://localhost:5000/requests/add';
       var optionAxios = {
             headers: {
-                'Access-Control-Allow-Origin': '*'
+               Authorization: "Bearer " + localStorage.getItem('vue-token')
             }
         }
       axios.post(path, payload, optionAxios)
         .then(() => {
-          console.log(payload)
+          console.log(`Print payload: ${payload}`)
           this.getRequests();
           this.message = 'Request added!';
           this.showMessage = true;
         })
         .catch((error) => {
           // eslint-disable-next-line
-          console.log(error);
+          console.log(`Post Req Error: ${error}`);
           this.getRequests();
         });
     },
@@ -269,6 +294,36 @@ export default {
       this.$refs.addRequestModal.hide();
       this.initForm();
     },
+    uploadRequest(request) {
+      this.editForm = request;
+    },
+    onSubmitUpload() {   
+      this.$refs.uploadRequestModal.hide();   
+      console.log(this.uploadedFile)
+      let requestID = this.editForm.requestid;
+      let formData = new FormData();
+      formData.append('image', this.uploadedFile);
+       for (var key of formData.entries()) {
+        console.log(key[0] + ', ' + key[1]);
+    }
+      var optionAxios = {
+            headers: {
+               Authorization: "Bearer " + localStorage.getItem('vue-token'),
+               'Content-Type': 'multipart/form-data'
+            }
+        }
+      const path = `http://localhost:5000/requests/upload/${requestID}`;      
+      axios.post(path, formData, optionAxios)     
+          .then(() => {
+            this.getRequests();
+            this.message = 'File uploaded!';
+            this.showMessage = true;
+        })
+        .catch((error) => {
+          console.error(error);
+          // this.getRequests();
+        });
+    },    
     editRequest(request) {
       this.editForm = request;
     },
@@ -276,7 +331,7 @@ export default {
       evt.preventDefault();
       this.$refs.editRequestModal.hide();
       let updated = true;
-      if (this.editForm.read[0]) read = true;
+      if (this.editForm.updated[0]) updated = true;
       const payload = {
         name: this.editForm.name,
         description: this.editForm.description,
@@ -284,11 +339,16 @@ export default {
         createdby: this.editForm.createdby,
         updated, // property shorthand
       };
-      this.updateRequest(payload, this.editForm.id);
+      this.updateRequest(payload, this.editForm.requestid);
     },
     updateRequest(payload, requestID) {
       const path = `http://localhost:5000/requests/${requestID}`;
-      axios.put(path, payload)
+      var optionAxios = {
+            headers: {
+               Authorization: "Bearer " + localStorage.getItem('vue-token')
+            }
+        }
+      axios.put(path, payload, optionAxios)
         .then(() => {
           this.getRequests();
           this.message = 'Request updated!';
@@ -308,7 +368,12 @@ export default {
     },
     removeRequest(requestID) {
       const path = `http://localhost:5000/requests/${requestID}`;
-      axios.delete(path)
+      var optionAxios = {
+            headers: {
+               Authorization: "Bearer " + localStorage.getItem('vue-token')
+            }
+        }
+      axios.delete(path, optionAxios)
         .then(() => {
           this.getRequests();
           this.message = 'Request removed!';
@@ -321,7 +386,8 @@ export default {
         });
     },
     onDeleteRequest(request) {
-      this.removeRequest(request.id);
+      console.log(request)
+      this.removeRequest(request.requestid);
     },
   },
   created() {
